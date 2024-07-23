@@ -1,6 +1,6 @@
 ![Python](https://img.shields.io/badge/Python-3670A0?style=plastic&logo=python&logoColor=ffdd54)  
 
-![GitHub](https://img.shields.io/github/license/Ramy-Badr-Ahmed/SignalProcessor)
+![GitHub](https://img.shields.io/github/license/Ramy-Badr-Ahmed/SignalProcessor?cached)
 
 # SignalProcessor
 
