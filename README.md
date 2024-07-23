@@ -1,5 +1,7 @@
 ![Python](https://img.shields.io/badge/Python-3670A0?style=plastic&logo=python&logoColor=ffdd54)  
 
+![GitHub](https://img.shields.io/github/license/Ramy-Badr-Ahmed/SignalProcessor)
+
 # SignalProcessor
 
 This repository provides a Python package for generating, filtering, fitting, and analyzing signals. The package includes functionalities for creating noisy signals, applying filters, fitting damped sine waves, and performing statistical analysis.
