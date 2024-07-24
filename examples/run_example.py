@@ -15,33 +15,40 @@ def run_example():
     print("Noisy signal generated.")
 
     # Retrieve noisySignal
-    parameter = processor.getParameter('noisySignal')
-    print(parameter)
+    noisySignal = processor.getParameter('noisySignal')
+    print("Noisy Signal:", noisySignal)
 
     # Apply a low-pass filter to the noisy signal
     processor.applyFilter()
     print("Applied low-pass filter.")
 
-    # Retrieve filteredSignal
-    parameter = processor.getParameter('filteredSignal')
-    print(parameter)
+    # Retrieve and print the filtered signal
+    filteredSignal = processor.getParameter('filteredSignal')
+    print("Filtered Signal:", filteredSignal)
 
-    # Fit a damped sine wave to the filtered signal
+    # Fit a damped sine wave to the filtered signal with default parameters
     processor.fitDampedSineWave()
     print("Fitted damped sine wave.")
 
-    # Retrieve fittedSignalDamped
-    parameter = processor.getParameter('fittedSignalDamped')
-    print(parameter)
+    # Fit a damped sine wave to the filtered signal with custom parameters
+    processor.setDampedSineWaveParameters(3.0, 12.0, np.pi / 6, 0.3)
+    processor.setDampedSineWaveBounds([0, 0, -np.pi/2, 0], [10, 20, np.pi/2, 1])
+    processor.fitDampedSineWave()
+    print("Fitted damped sine wave.")
 
-    # Perform a timeVector-test between the filtered signal and the fitted signal
+    # Retrieve and print the fitted damped sine wave signal
+    fittedSignalDamped = processor.getParameter('fittedSignalDamped')
+    print("Fitted Damped Sine Wave Signal:", fittedSignalDamped)
+
+    # Perform a t-test between the filtered signal and the fitted damped sine wave
     processor.performTTest()
     print("Performed timeVector-test.")
 
-    # Retrieve timeStatistic
-    timeStatistic = processor.getParameter('timeStatistic')
-    pValue = processor.getParameter('pValue')
-    print(timeStatistic, pValue)
+    # Retrieve and print t-test results
+    time_statistic = processor.getParameter('timeStatistic')
+    p_value = processor.getParameter('pValue')
+    print("T-Statistic:", time_statistic)
+    print("P-Value:", p_value)
 
     # Plot and save results
     processor.plotResults()

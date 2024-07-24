@@ -51,19 +51,32 @@ timeVector = np.linspace(0, 1, 1000, endpoint = False)  # Or consider importing 
 
 processor = SignalProcessor(timeVector)
    
-processor.generateNoisySignal(frequency = 20, noiseStdDev = 0.6)  # or empty: default frequency = 10, noiseStdDev = 0.5
+processor.generateNoisySignal(frequency = 20, noiseStdDev = 0.6)
+
+  # or with defaults:
+    processor.generateNoisySignal()   # frequency = 10, noiseStdDev = 0.5
 ```
 
 Apply Butterworth low-pass filter
 
 ```shell
-processor.applyFilter(filterOrder = 2, cutoffFrequency = 0.8)   # or empty: default filterOrder = 4, cutoffFrequency = 0.2
+processor.applyFilter(filterOrder = 2, cutoffFrequency = 0.8)
+
+  # or with defaults:
+    processor.applyFilter()   # filterOrder = 4, cutoffFrequency = 0.2
 ```
 
 Fit a damped sine wave to the filtered signal
 
 ```shell
-processor.fitDampedSineWave()   # default sine wave parameters: amplitudeParam = 1.0, frequencyParam = 10.0, phaseParam = 0.0, decayRateParam = 0.1
+    # default sine wave parameters: amplitudeParam = 1.0, frequencyParam = 10.0, phaseParam = 0.0, decayRateParam = 0.1
+    
+processor.fitDampedSineWave()
+   
+    # Or preset with:
+      processor.setDampedSineWaveParameters(3.0, 12.0, np.pi / 6, 0.3)
+      processor.setDampedSineWaveBounds([0, 0, -np.pi/2, 0], [10, 20, np.pi/2, 1])
+      processor.fitDampedSineWave()
 ```
 
 Perform a t-test between the filtered signal and the fitted damped sine wave
