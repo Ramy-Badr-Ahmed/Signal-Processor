@@ -52,7 +52,7 @@ def run_example():
 
     # Plot and save results
     processor.plotResults()
-    print("Results plotted and saved as 'advanced_results.png'.")
+    print("Results plotted and saved as 'plot_results.png'.")
 
     # Print the fitting results and statistical analysis
     processor.printResults()
