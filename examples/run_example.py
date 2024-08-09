@@ -45,10 +45,10 @@ def run_example():
     print("Performed timeVector-test.")
 
     # Retrieve and print t-test results
-    time_statistic = processor.getParameter('timeStatistic')
-    p_value = processor.getParameter('pValue')
-    print("T-Statistic:", time_statistic)
-    print("P-Value:", p_value)
+    timeStatistic = processor.getParameter('timeStatistic')
+    pValue = processor.getParameter('pValue')
+    print("T-Statistic:", timeStatistic)
+    print("P-Value:", pValue)
 
     # Plot and save results
     processor.plotResults()
@@ -56,6 +56,10 @@ def run_example():
 
     # Print the fitting results and statistical analysis
     processor.printResults()
+
+    # Print the fitting results and statistical analysis
+    fittingResults = processor.getFittingResults()
+    print("Fitting Results:", fittingResults)
 
 if __name__ == "__main__":
     run_example()

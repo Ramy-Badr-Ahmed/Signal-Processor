@@ -1,35 +1,37 @@
 import os
-
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 from scipy import signal, optimize, stats
+from typing import Optional
+import plotly.graph_objects as go
+import plotly.offline as pyo
 
 
 class SignalProcessor:
-    def __init__(self, timeVector):
+    def __init__(self, timeVector: np.ndarray):
         """
         Initialize the SignalProcessor with a time vector.
         :param timeVector: A numpy array of time points at which signals are sampled.
         """
         self.timeVector = timeVector
-        self.noisySignal = None
-        self.filteredSignal = None
-        self.fittedSignalDamped = None
-        self.optimalParamsDamped = None
-        self.timeStatistic = None
-        self.pValue = None
+        self.noisySignal: Optional[np.ndarray] = None
+        self.filteredSignal: Optional[np.ndarray] = None
+        self.fittedSignalDamped: Optional[np.ndarray] = None
+        self.optimalParamsDamped: Optional[np.ndarray] = None
+        self.timeStatistic: Optional[float] = None
+        self.pValue: Optional[float] = None
 
         # Default parameters for the damped sine wave
-        self.amplitudeParam = 1.0
-        self.frequencyParam = 10.0
-        self.phaseParam = 0.0
-        self.decayRateParam = 0.1
+        self.amplitudeParam: float = 1.0
+        self.frequencyParam: float = 10.0
+        self.phaseParam: float = 0.0
+        self.decayRateParam: float = 0.1
 
         # Default bounds for the damped sine wave
-        self.bounds = ([0, 0, -np.pi, 0], [np.inf, np.inf, np.pi, np.inf])
+        self.bounds: tuple = ([0, 0, -np.pi, 0], [np.inf, np.inf, np.pi, np.inf])
 
-    def generateNoisySignal(self, frequency = 10, noiseStdDev = 0.5):
+    def generateNoisySignal(self, frequency: float = 10, noiseStdDev: float = 0.5) -> None:
         """
         Generate a noisy signal using the defined time vector.
         :param frequency: Frequency of the sine wave (default is 10 Hz).
@@ -41,7 +43,7 @@ class SignalProcessor:
         self.noisySignal = np.sin(2 * np.pi * frequency * self.timeVector) + noiseStdDev * np.random.randn(len(self.timeVector))
         print("Noisy signal generated.")
 
-    def getParameter(self, paramName):
+    def getParameter(self, paramName: str) -> Optional[np.ndarray]:
         """
         Get the value of a specified parameter.
         :param paramName: The name of the parameter to retrieve.
@@ -62,7 +64,21 @@ class SignalProcessor:
         else:
             raise ValueError(f"Parameter '{paramName}' does not exist. Available parameters are: {', '.join(paramMap.keys())}.")
 
-    def applyFilter(self, filterOrder = 4, cutoffFrequency = 0.2):
+    def getFittingResults(self) -> dict:
+        """
+        Retrieve fitting results as a dictionary.
+        :return: A dictionary containing optimal parameters, t-statistic, and p-value.
+        """
+        if self.optimalParamsDamped is None or self.timeStatistic is None or self.pValue is None:
+            raise ValueError("Fitting results are not available. Please run 'fitDampedSineWave()' and 'performTTest()' first.")
+
+        return {
+            'optimalParams': self.optimalParamsDamped,
+            'timeStatistic': self.timeStatistic,
+            'pValue': self.pValue
+        }
+
+    def applyFilter(self, filterOrder: int = 4, cutoffFrequency: float = 0.2) -> None:
         """
         Apply a Butterworth low-pass filter to the noisy signal.
         :param filterOrder: Order of the Butterworth filter (default is 4).
@@ -78,7 +94,7 @@ class SignalProcessor:
 
         print("Filter applied.")
 
-    def computeFFT(self, signalToTransform):
+    def computeFFT(self, signalToTransform: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """
         Compute the Fast Fourier Transform (FFT) of a signal.
         :param signalToTransform: The signal to transform.
@@ -97,7 +113,7 @@ class SignalProcessor:
 
         return frequencies, magnitudes
 
-    def setDampedSineWaveParameters(self, amplitudeParam, frequencyParam, phaseParam, decayRateParam):
+    def setDampedSineWaveParameters(self, amplitudeParam: float, frequencyParam: float, phaseParam: float, decayRateParam: float) -> None:
         """
         Set the parameters for the damped sine wave fitting.
         :param amplitudeParam: Amplitude parameter for the sine wave.
@@ -110,7 +126,7 @@ class SignalProcessor:
         self.phaseParam = phaseParam
         self.decayRateParam = decayRateParam
 
-    def setDampedSineWaveBounds(self, lower, upper):
+    def setDampedSineWaveBounds(self, lower: list[float], upper: list[float]) -> None:
         """
         Set the bounds for the damped sine wave fitting parameters.
         Default: ([0, 0, -np.pi, 0], [np.inf, np.inf, np.pi, np.inf])
@@ -121,7 +137,7 @@ class SignalProcessor:
             raise ValueError("Bounds should be lists of length 4.")
         self.bounds = (lower, upper)
 
-    def fitDampedSineWave(self):
+    def fitDampedSineWave(self)-> None:
         """
         Fit a damped sine wave to the filtered signal using nonlinear least squares.
         default sine wave parameters: amplitudeParam = 1.0, frequencyParam = 10.0, phaseParam = 0.0, decayRateParam = 0.1
@@ -130,10 +146,10 @@ class SignalProcessor:
         if self.filteredSignal is None:
             raise ValueError("Filtered signal is not available. Please apply the filter first 'applyFilter()'.")
 
-        def dampedSineFunc(time, amplitude, frequency, phase, decayRate):
+        def dampedSineFunc(time: np.ndarray, amplitude: float, frequency: float, phase: float, decayRate: float) -> np.ndarray:
             return amplitude * np.exp(-decayRate * time) * np.sin(2 * np.pi * frequency * time + phase)
 
-        def residualsDamped(params, time, data):
+        def residualsDamped(params: np.ndarray, time: np.ndarray, data: np.ndarray) -> np.ndarray:
             return dampedSineFunc(time, *params) - data
 
         initialParams = np.array([self.amplitudeParam, self.frequencyParam, self.phaseParam, self.decayRateParam])
@@ -148,7 +164,7 @@ class SignalProcessor:
 
         print("Damped sine wave fitted.")
 
-    def performTTest(self):
+    def performTTest(self)-> None:
         """
         Perform a t-test between the filtered signal and the fitted damped sine wave.
         """
@@ -162,7 +178,7 @@ class SignalProcessor:
 
         print("T-test performed.")
 
-    def plotResults(self):
+    def plotResults(self)-> None:
         """
         Generate and save plots of the results including the signals and their Fourier Transforms.
         """
@@ -220,7 +236,85 @@ class SignalProcessor:
         except Exception as e:
             raise RuntimeError(f"Plotting failed: {e}")
 
-    def printResults(self):
+    def plotInteractiveResults(self) -> None:
+        """
+        Generate interactive plots of the results including the signals and their Fourier Transforms.
+        Each plot is saved in a separate HTML file.
+        """
+        if self.noisySignal is None or self.filteredSignal is None or self.fittedSignalDamped is None:
+            raise ValueError("Noisy signal, filtered signal, and fitted signal must be available.")
+
+        try:
+            saveDir = '../plots/'
+            os.makedirs(saveDir, exist_ok = True)
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+            xfNoisy, yfNoisy = self.computeFFT(self.noisySignal)
+            xfFiltered, yfFiltered = self.computeFFT(self.filteredSignal)
+
+            # Time-domain plots for noisy and filtered signals
+            fig_time_domain = go.Figure()
+            fig_time_domain.add_trace(go.Scatter(x = self.timeVector, y = self.noisySignal, mode = 'lines', name = 'Noisy Signal'))
+            fig_time_domain.add_trace(go.Scatter(x = self.timeVector, y = self.filteredSignal, mode = 'lines', name = 'Filtered Signal'))
+            fig_time_domain.update_layout(title='Time-Domain Signal Processing',
+                                          xaxis_title = 'Time (s)',
+                                          yaxis_title = 'Amplitude',
+                                          margin = dict(l = 0, r = 0, t = 50, b = 0)
+                                          )
+
+            pyo.plot(fig_time_domain, filename = f'{saveDir}interactive_TimeDomain_{timestamp}.html', auto_open = True)
+
+            # Fitting results
+            fig_fitting = go.Figure()
+            fig_fitting.add_trace(go.Scatter(x = self.timeVector, y = self.filteredSignal, mode = 'lines', name = 'Filtered Signal'))
+            fig_fitting.add_trace(go.Scatter(x = self.timeVector, y = self.fittedSignalDamped, mode = 'lines', name = 'Fitted Damped Sine Wave'))
+            fig_fitting.update_layout(title = 'Fitting Damped Sine Wave',
+                                      xaxis_title = 'Time (s)',
+                                      yaxis_title = 'Amplitude',
+                                      margin = dict(l = 0, r = 0, t = 50, b = 0)
+                                      )
+
+            pyo.plot(fig_fitting, filename = f'{saveDir}interactive_Fitting_{timestamp}.html', auto_open = True)
+
+            # Fourier Transform of noisy signal
+            fig_fft_noisy = go.Figure()
+            fig_fft_noisy.add_trace(go.Scatter(x = xfNoisy, y = yfNoisy, mode = 'lines', name = 'FFT of Noisy Signal'))
+            fig_fft_noisy.update_layout(title='Fourier Transform of Noisy Signal',
+                                        xaxis_title = 'Frequency (Hz)',
+                                        yaxis_title = 'Amplitude',
+                                        margin = dict(l = 0, r = 0, t = 50, b = 0)
+                                        )
+
+            pyo.plot(fig_fft_noisy, filename = f'{saveDir}interactive_FFT_Noisy_{timestamp}.html', auto_open = True)
+
+            # Fourier Transform of filtered signal
+            fig_fft_filtered = go.Figure()
+            fig_fft_filtered.add_trace(go.Scatter(x = xfFiltered, y = yfFiltered, mode = 'lines', name = 'FFT of Filtered Signal'))
+            fig_fft_filtered.update_layout(title='Fourier Transform of Filtered Signal',
+                                           xaxis_title = 'Frequency (Hz)',
+                                           yaxis_title = 'Amplitude',
+                                           margin = dict(l = 0, r = 0, t = 50, b = 0)
+                                           )
+
+            pyo.plot(fig_fft_filtered, filename = f'{saveDir}interactive_FFT_Filtered_{timestamp}.html', auto_open = True)
+
+            # Scatter plot for fitted vs filtered signal
+            fig_scatter = go.Figure()
+            fig_scatter.add_trace(go.Scatter(x = self.filteredSignal, y = self.fittedSignalDamped, mode = 'markers', name = 'Fitted vs Filtered'))
+            fig_scatter.update_layout(title = f'Scatter Plot\nT-statistic: {self.timeStatistic:.2f}, p-value: {self.pValue:.2e}',
+                                      xaxis_title = 'Filtered Signal',
+                                      yaxis_title = 'Fitted Signal',
+                                      margin = dict(l = 0, r = 0, t = 50, b = 0)
+                                      )
+            fig_scatter.write_html(f'{saveDir}interactive_Scatter_{timestamp}.html')
+
+            pyo.plot(fig_scatter, filename = f'{saveDir}interactive_Scatter_{timestamp}.html', auto_open = True)
+
+            print("Interactive plots generated and saved.")
+        except Exception as e:
+            raise RuntimeError(f"Interactive plotting failed: {e}")
+
+    def printResults(self) -> None:
         """
         Print the results of the fitting and statistical analysis.
         """
