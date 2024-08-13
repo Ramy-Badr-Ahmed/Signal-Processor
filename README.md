@@ -8,7 +8,7 @@ This repository provides a Python package for generating, filtering, fitting, an
 
 ### Overview
 
-- Generate noisy sine wave signals
+- Generate noisy sine wave signals (or import one)
 - Apply Butterworth low-pass filters
 - Fit damped sine waves to filtered signals
 - Perform t-tests between filtered signals and fitted models
