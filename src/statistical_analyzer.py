@@ -4,26 +4,32 @@ from typing import Optional
 
 class StatisticalAnalyzer:
     def __init__(self, filteredSignal: np.ndarray, fittedSignalDamped: np.ndarray):
+        """
+        Initialize the StatisticalAnalyzer with the original and fitted signals.
+        :param filteredSignal: The original filtered signal.
+        :param fittedSignalDamped: The fitted signal to compare.
+        """
         self.filteredSignal = filteredSignal
         self.fittedSignalDamped = fittedSignalDamped
-        self.tStatistic: Optional[float] = None
+        self.timeStatistic: Optional[float] = None
         self.pValue: Optional[float] = None
 
-    def performTTest(self) -> tuple[float, float]:
-        """
-        Perform a t-test between the filtered signal and the fitted damped sine wave.
-        """
-        if self.filteredSignal is None or self.fittedSignalDamped is None:
-            raise ValueError("Both filtered signal and fitted signal must be available. Please run 'applyFilter' and 'fitDampedSineWave' first.")
+        self.performTTest()
 
+    def performTTest(self) -> 'StatisticalAnalyzer':
+        """
+        Perform a t-test comparing the filtered signal with the fitted signal.
+        """
+        if self.fittedSignalDamped is None or len(self.fittedSignalDamped) == 0:
+            raise ValueError("Fitted signal is None or empty. Cannot perform t-test.")
         try:
             self.timeStatistic, self.pValue = stats.ttest_ind(self.filteredSignal, self.fittedSignalDamped)
         except Exception as e:
             raise RuntimeError(f"T-test failed: {e}")
 
-        print("T-test performed.")
+        print(f"T-test performed. T-statistic: {self.timeStatistic:.2f}, p-value: {self.pValue:.2e}")
 
-        return self.tStatistic, self.pValue
+        return self
 
     def getTTestResults(self) -> tuple[Optional[float], Optional[float]]:
-        return self.tStatistic, self.pValue
+        return self.timeStatistic, self.pValue
