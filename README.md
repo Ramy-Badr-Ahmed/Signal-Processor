@@ -8,7 +8,7 @@ This repository provides a Python package for generating, filtering, fitting, an
 
 ### Overview
 
-- Generate noisy sine wave signals (or import one)
+- Generate noisy sine wave signals (or import custom signals)
 - Apply Butterworth low-pass filters
 - Fit damped sine waves to filtered signals
 - Perform t-tests between filtered signals and fitted models
@@ -34,7 +34,7 @@ python -m unittest discover -s tests
 ```
 
 ### Example
-An example demonstrating generating a signal, applying filters, fitting models, and performing analysis, exists under `examples` directory (refer to `run_example.py`)
+An example demonstrating generating a signal, applying filters, fitting models, and performing analysis, exists in the `main.py`.
 
 >[!Note]
 > An example plot has been uploaded to the `plots` directory.
@@ -49,49 +49,61 @@ from src.signal_processor import SignalProcessor
 
 timeVector = np.linspace(0, 1, 1000, endpoint = False)  # Or consider importing or modifying your time vector
 
-processor = SignalProcessor(timeVector)
+generator = SignalGenerator(timeVector)
    
-processor.generateNoisySignal(frequency = 20, noiseStdDev = 0.6)
+generator.generateNoisySignal(frequency = 20, noiseStdDev = 0.6)
 
   # or with defaults:
     processor.generateNoisySignal()   # frequency = 10, noiseStdDev = 0.5
 ```
 
-Apply Butterworth low-pass filter
+Apply a Filter (`butter`, `bessel`, `highpass`). Default is `butter`.
 
 ```shell
-processor.applyFilter(filterOrder = 2, cutoffFrequency = 0.8)
+from src.signal_filter import SignalFilter
 
-  # or with defaults:
-    processor.applyFilter()   # filterOrder = 4, cutoffFrequency = 0.2
+filteredInstance = generator.generateNoisySignal() \
+                            .applyFilter(filterType = 'butter', 
+                                         filterOrder = 4, 
+                                         cutOffFrequency = 0.2, 
+                                         bType = 'lowpass')
+    # Or with different filter parameters:
+      filteredInstance.setFilterParameters('bessel', 5, 0.5, 'highpass').applyFilter()    
 ```
 
 Fit a damped sine wave to the filtered signal
 
-```shell
+```shell    
+from src.signal_fitter import SignalFitter
+
     # default sine wave parameters: amplitudeParam = 1.0, frequencyParam = 10.0, phaseParam = 0.0, decayRateParam = 0.1
-    
-processor.fitDampedSineWave()
-   
-    # Or preset with:
-      processor.setDampedSineWaveParameters(3.0, 12.0, np.pi / 6, 0.3)
-      processor.setDampedSineWaveBounds([0, 0, -np.pi/2, 0], [10, 20, np.pi/2, 1])
-      processor.fitDampedSineWave()
+fittedInstance = filteredInstance.fitDampedSineWave()
+
+    # Or with custom parameters:
+      fittedInstance.setDampedSineWaveParameters(3.0, 12.0, np.pi / 6, 0.3)
+      fittedInstance.setDampedSineWaveBounds([0, 0, -np.pi/2, 0], [10, 20, np.pi/2, 1])
+      fittedInstance.fitDampedSineWave()      
 ```
 
 Perform a t-test between the filtered signal and the fitted damped sine wave
 
 ```shell
-processor.performTTest()
+from src.statistical_analyzer import StatisticalAnalyzer
+
+analyzedInstance = fittedInstance.analyzeFit()
+tTestResults = analyzedInstance.getTTestResults()
+print(f"T-test result: statistic={tTestResults[0]}, p-value={tTestResults[1]}")
 ```
 
 Plot and save the results (will be saved under `plots` directory)
 
 ```shell
-processor.plotResults()
-```
+from src.signal_visualizer import SignalVisualizer
 
-Print the fitting and statistical results
-```shell
-processor.printResults()
+visualizer = SignalVisualizer(timeVector, generator.getNoisySignal(), 
+                              filteredInstance.getFilteredSignal(), 
+                              fittedInstance.getFittedSignal()
+                              )
+visualizer.plotResults()
+visualizer.plotInteractiveResults()
 ```
